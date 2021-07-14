@@ -27,6 +27,7 @@ firebase==3.0.1
 Flask==1.1.2
 Flask-Cors==3.0.9
 future==0.18.2
+fuzzyset @ git+https://github.com/alpae/fuzzyset@7e37c65bac1897c87da850872269e5311abffd61
 gcloud==0.18.3
 gevent==21.1.2
 gevent-websocket==0.10.1
@@ -78,6 +79,7 @@ Pyrebase4==4.4.1
 python-dateutil==2.8.1
 python-firebase==1.2
 python-jwt==2.0.1
+python-Levenshtein==0.12.2
 python-multipart==0.0.5
 pytz==2020.4
 pywin32-ctypes==0.2.0
@@ -91,6 +93,7 @@ six==1.14.0
 sseclient==0.0.27
 starlette==0.13.6
 terminaltables==3.1.0
+texttable==1.6.4
 threadpoolctl==2.1.0
 toml==0.10.1
 urllib3==1.25.11
