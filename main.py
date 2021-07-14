@@ -14,7 +14,7 @@ app.add_middleware(
 )
 @app.get("/")
 def root():
-    return {'Sistema': 'Fast Hospital'}
+    return {'Sistema': 'VacunaRD'}
 
 @app.get("/api/ConsultarCedula/{cedula}")
 def ConsultarCedula(cedula:str):
@@ -64,9 +64,39 @@ def ConsultaDeVacunados():
     contenido = cursor.fetchall()
     conexion.commit()
     for i in contenido:
-        Datos.append({"IdUsuario":i[0],"Cedula":i[1],"Nombre": i[2], "Apellido": i[3], "Telefono": i[4],"Fecha_Nacimiento":i[5]
-                    ,"Zodiaco":i[6],"IdVacuna":i[7],"NombreVacuna":i[8],"Provincia":i[9],"Fecha_Vacunacion":i[10],"Cantidad":i[11]})
+        Datos.append({"Cedula":i[1],"Nombre": i[2], "Apellido": i[3], "Telefono": i[4],"Fecha_Nacimiento":i[5]
+                    ,"Zodiaco":i[6],"Cantidad":i[7]})
     return Datos
+
+@app.get("/api/ConsultaDeVacunadoUnico/{NombreOApellido}")
+def ConsultaDeVacunadoUnico(NombreOApellido:str):
+    Datos = []
+    Cedula=""
+    Nombre=""
+    Apellido=""
+    Telefono=""
+    Fecha_Nacimiento=""
+    Zodiaco=""
+    Cantidad=""
+    cursor = conexion.cursor()
+    cursor.execute("SP_ConsultaDeVacunadoUnico '"+NombreOApellido+"'")
+    contenido = cursor.fetchall()
+    conexion.commit()
+    for i in contenido:
+        Cedula=i[1]
+        Nombre= i[2]
+        Apellido= i[3]
+        Telefono= i[4]
+        Fecha_Nacimiento=i[5]
+        Zodiaco=i[6]
+        Cantidad=i[7]
+    cursor.execute("select NombreVacuna, Provincia,Fecha_Vacunacion from [dbo].[Vacunas] WHERE CedulaVacunado = '"+Cedula+"'")
+    contenido2 = cursor.fetchall()
+    for i in contenido2:
+        Datos.append({"NombreVacuna":i[0], "Provincia":i[1], "FechaVacunacion":i[2]})
+
+    return {"Cedula":Cedula,"Nombre": Nombre, "Apellido": Apellido, "Telefono": Telefono,"Fecha_Nacimiento":Fecha_Nacimiento
+                    ,"Zodiaco":Zodiaco,"Cantidad":Cantidad, "DatosVAcunas": Datos}
 
 @app.get("/api/VacunadosPorProvincia/{provincia}")
 def VacunadosPorProvincia(provincia:str):
@@ -119,7 +149,7 @@ def EliminarRegistroVacunado(IdUser:str):
         conexion.commit()
         return {"ok":True}
     except:
-        return {"ok":True}
+        return {"ok":False}
 
 #CRUD PROVINCIAS
 
@@ -168,7 +198,7 @@ def ActualizarProvincia(IdProvincia:str,NuevoNombre:str):
         conexion.commit()
         return {"ok":True}
     except:
-        return {"ok":True}
+        return {"ok":False}
 #Delete
 @app.delete("/api/EliminarProvincia/{IdProvincia}")
 def EliminarProvincia(IdProvincia:str):
@@ -178,7 +208,7 @@ def EliminarProvincia(IdProvincia:str):
         conexion.commit()
         return {"ok":True}
     except:
-        return {"ok":True}
+        return {"ok":False}
 
 #CRUD VacunasExistente
 
