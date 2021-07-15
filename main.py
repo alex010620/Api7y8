@@ -16,11 +16,12 @@ app.add_middleware(
 server = 'vtrd.mysql.database.azure.com'
 database = 'VacunateRDv'
 username = 'ADMyamc@vtrd'
+
 password = "Ya95509550"  
 
 
 conexion = mysql.connector.connect(user="ADMyamc@vtrd", password="Ya95509550", host="vtrd.mysql.database.azure.com",
- port=3306, database="VacunateRDv")
+port=3306, database="VacunateRDv")
 
 @app.get("/")
 def root():
