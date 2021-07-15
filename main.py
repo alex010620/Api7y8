@@ -20,7 +20,7 @@ username = 'ADMyamc@vtrd'
 password = "Ya95509550"  
 
 
-conexion = mysql.connector.connect(user="ADMyamc@vtrd", password="Ya95509550", host="vtrd.mysql.database.azure.com",port=3306, database="VacunateRDv")
+conexion = mysql.connector.connect(user="ADMyamc@vtrd", password="Ya95509550", host="vtrd.mysql.database.azure.com",port=3306,database="VacunateRDv")
 
 @app.get("/")
 def root():
@@ -72,8 +72,7 @@ def ConsultaDeVacunados():
     for result in cursor.stored_results():
         contenido = result.fetchall()
     for i in contenido:
-        Datos.append({"IdUsuario":i[0],"Cedula":i[1],"Nombre": i[2], "Apellido": i[3], "Telefono": i[4],"Fecha_Nacimiento":i[5]
-                    ,"Zodiaco":i[6],"Cantidad":i[7]})
+        Datos.append({"IdUsuario":i[0],"Cedula":i[1],"Nombre": i[2], "Apellido": i[3], "Telefono": i[4],"Fecha_Nacimiento":i[5],"Zodiaco":i[6],"Cantidad":i[7]})
     return Datos
 
 @app.get("/api/ConsultaDeVacunadoUnico/{NombreOApellido}")
