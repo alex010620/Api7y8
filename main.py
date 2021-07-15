@@ -43,12 +43,10 @@ def ConsultarCedula(cedula:str):
 def RegistrarVacunadosFirst(d:DatosVacunacionFirst):
     try:
         cursor = conexion.cursor()
-        TablaUser = (d.Cedula,d.Nombre,d.Apellido,d.Telefono,d.Fecha_Nacimiento,d.Zodiaco)
-        TablaVacuna = (d.Cedula,d.NombreVacuna,d.Provincia,d.Fecha_Vacunacion)
-        sql = '''INSERT INTO Usuarios(Cedula,Nombre,Apellido,Telefono,Fecha_Nacimiento,Zodiaco)VALUES(?,?,?,?,?,?)'''
-        sql2 = '''INSERT INTO Vacunas(CedulaVacunado,NombreVacuna,Provincia,Fecha_Vacunacion)VALUES(?,?,?,?)'''
-        cursor.execute(sql, TablaUser)
-        cursor.execute(sql2, TablaVacuna)
+        sql = "INSERT INTO Usuarios(Cedula,Nombre,Apellido,Telefono,Fecha_Nacimiento,Zodiaco)VALUES('"+d.Cedula+"','"+d.Nombre+"','"+d.Apellido+"','"+d.Telefono+"','"+d.Fecha_Nacimiento+"','"+d.Zodiaco+"')"
+        sql2 = "INSERT INTO Vacunas(CedulaVacunado,NombreVacuna,Provincia,Fecha_Vacunacion)VALUES('"+d.Cedula+"','"+d.NombreVacuna+"','"+d.Provincia+"','"+d.Fecha_Vacunacion+"')"
+        cursor.execute(sql)
+        cursor.execute(sql2)
         conexion.commit()
         return {"ok":True}
     except TypeError:
@@ -58,9 +56,8 @@ def RegistrarVacunadosFirst(d:DatosVacunacionFirst):
 def OtrasDosis(d:Dosis):
     try:
         cursor = conexion.cursor()
-        TablaVacuna = (d.Cedula,d.NombreVacuna,d.Provincia,d.Fecha_Vacunacion)
-        sql2 = '''INSERT INTO Vacunas(CedulaVacunado,NombreVacuna,Provincia,Fecha_Vacunacion)VALUES(?,?,?,?)'''
-        cursor.execute(sql2, TablaVacuna)
+        sql2 = "INSERT INTO Vacunas(CedulaVacunado,NombreVacuna,Provincia,Fecha_Vacunacion)VALUES('"+d.Cedula+"','"+d.NombreVacuna+"','"+d.Provincia+"','"+d.Fecha_Vacunacion+"')"
+        cursor.execute(sql2)
         conexion.commit()
         return {"ok":True}
     except:
@@ -70,17 +67,19 @@ def OtrasDosis(d:Dosis):
 def ConsultaDeVacunados():
     Datos = []
     cursor = conexion.cursor()
-    cursor.execute('SP_ConsultaDeVacunados')
-    contenido = cursor.fetchall()
+    cursor.callproc('SP_ConsultaDeVacunados')
     conexion.commit()
+    for result in cursor.stored_results():
+        contenido = result.fetchall()
     for i in contenido:
-        Datos.append({"Cedula":i[1],"Nombre": i[2], "Apellido": i[3], "Telefono": i[4],"Fecha_Nacimiento":i[5]
+        Datos.append({"IdUsuario":i[0],"Cedula":i[1],"Nombre": i[2], "Apellido": i[3], "Telefono": i[4],"Fecha_Nacimiento":i[5]
                     ,"Zodiaco":i[6],"Cantidad":i[7]})
     return Datos
 
 @app.get("/api/ConsultaDeVacunadoUnico/{NombreOApellido}")
 def ConsultaDeVacunadoUnico(NombreOApellido:str):
     Datos = []
+    idf = 0
     Cedula=""
     Nombre=""
     Apellido=""
@@ -89,10 +88,11 @@ def ConsultaDeVacunadoUnico(NombreOApellido:str):
     Zodiaco=""
     Cantidad=""
     cursor = conexion.cursor()
-    cursor.execute("SP_ConsultaDeVacunadoUnico '"+NombreOApellido+"'")
+    cursor.execute("SELECT U.*, Count(V.IdVacuna) As Cantidaddevacunas FROM Usuarios AS U INNER JOIN Vacunas AS V ON U.Cedula = V.CedulaVacunado WHERE U.Nombre = '"+NombreOApellido+"' or U.Apellido= '"+NombreOApellido+"' GROUP BY U.idUsuario,U.Cedula, U.Nombre, U.Apellido,U.Telefono,U.Fecha_Nacimiento,U.Zodiaco")
     contenido = cursor.fetchall()
     conexion.commit()
     for i in contenido:
+        idf = i[0]
         Cedula=i[1]
         Nombre= i[2]
         Apellido= i[3]
@@ -100,24 +100,24 @@ def ConsultaDeVacunadoUnico(NombreOApellido:str):
         Fecha_Nacimiento=i[5]
         Zodiaco=i[6]
         Cantidad=i[7]
-    cursor.execute("select NombreVacuna, Provincia,Fecha_Vacunacion from [dbo].[Vacunas] WHERE CedulaVacunado = '"+Cedula+"'")
+    cursor.execute("select NombreVacuna, Provincia,Fecha_Vacunacion from Vacunas WHERE CedulaVacunado = '"+Cedula+"'")
     contenido2 = cursor.fetchall()
     for i in contenido2:
         Datos.append({"NombreVacuna":i[0], "Provincia":i[1], "FechaVacunacion":i[2]})
 
-    return {"Cedula":Cedula,"Nombre": Nombre, "Apellido": Apellido, "Telefono": Telefono,"Fecha_Nacimiento":Fecha_Nacimiento
+    return {"idUsuario":idf,"Cedula":Cedula,"Nombre": Nombre, "Apellido": Apellido, "Telefono": Telefono,"Fecha_Nacimiento":Fecha_Nacimiento
                     ,"Zodiaco":Zodiaco,"Cantidad":Cantidad, "DatosVAcunas": Datos}
 
 @app.get("/api/VacunadosPorProvincia/{provincia}")
 def VacunadosPorProvincia(provincia:str):
     Datos = []
     cursor = conexion.cursor()
-    cursor.execute("SP_VacunadosPorProvincia '"+provincia+"'")
+    cursor.execute("SELECT U.Cedula,U.Nombre, U.Apellido,U.Telefono,V.NombreVacuna,V.Provincia,V.Fecha_Vacunacion,U.IdUsuario FROM Usuarios AS U INNER JOIN Vacunas AS V ON U.Cedula = V.CedulaVacunado WHERE V.Provincia = '"+provincia+"' GROUP BY U.Cedula, U.Nombre,U.Apellido,U.Telefono,V.NombreVacuna,V.Provincia,V.Fecha_Vacunacion,U.IdUsuario")
     contenido = cursor.fetchall()
     conexion.commit()
     for i in contenido:
         Datos.append({"ok":True,"Cedula":i[0],"Nombre": i[1], "Apellido": i[2], "Telefono": i[3],"NombreVacuna":i[4],
-                    "Provincia":i[5],"Fecha_Vacunacion":i[6]})
+                    "Provincia":i[5],"Fecha_Vacunacion":i[6], "IdUsuario":[7]})
     if Datos == []:
         return {"ok":False}
     else:
@@ -127,9 +127,10 @@ def VacunadosPorProvincia(provincia:str):
 def VacunadosPorMarcaDeVacuna():
     Datos = []
     cursor = conexion.cursor()
-    cursor.execute('SP_VacunadosPorMarcaDeVacuna')
-    contenido = cursor.fetchall()
+    cursor.callproc('SP_VacunadosPorMarcaDeVacuna')
     conexion.commit()
+    for result in cursor.stored_results():
+        contenido = result.fetchall()
     for i in contenido:
         Datos.append({"ok":True,"NombreVacuna":i[0],"Cantidad":i[1]})
     if Datos == []:
@@ -141,7 +142,7 @@ def VacunadosPorMarcaDeVacuna():
 def VacunadosPorZodiaco():
     Datos = []
     cursor = conexion.cursor()
-    cursor.execute('SP_VacunadosPorZodiaco')
+    cursor.execute('Select Zodiaco, Count(IdUsuario) as Cantidad from Usuarios where Zodiaco = Zodiaco GROUP BY Zodiaco')
     contenido = cursor.fetchall()
     conexion.commit()
     for i in contenido:
@@ -154,9 +155,15 @@ def VacunadosPorZodiaco():
 @app.delete("/api/EliminarRegistroVacunado/{IdUser}")
 def EliminarRegistroVacunado(IdUser:str):
     try:
+        Cedula = ""
         cursor = conexion.cursor()
-        cursor.execute("Delete from [dbo].[Usuarios] where IdUsuario = '"+IdUser+"'")
+        cursor.execute("Select CedulaVacunado from Vacunas where IdVacuna = '"+IdUser+"'")
+        contenido = cursor.fetchall()
         conexion.commit()
+        for i in contenido:
+            Cedula = i[0]
+        cursor.execute("Delete from Usuarios where IdUsuario = '"+IdUser+"'")
+        cursor.execute("Delete from Vacunas where CedulaVacunado = '"+Cedula+"'")
         return {"ok":True}
     except:
         return {"ok":False}
@@ -204,7 +211,7 @@ def NuevaProvincia(Nombre:str):
 def ActualizarProvincia(IdProvincia:str,NuevoNombre:str):
     try:
         cursor = conexion.cursor()
-        cursor.execute("Update [dbo].[Provincias] set NombreProvincia = '"+NuevoNombre+"' where IdProvincia = '"+IdProvincia+"'")
+        cursor.execute("Update Provincias set NombreProvincia = '"+NuevoNombre+"' where IdProvincia = '"+IdProvincia+"'")
         conexion.commit()
         return {"ok":True}
     except:
@@ -214,7 +221,7 @@ def ActualizarProvincia(IdProvincia:str,NuevoNombre:str):
 def EliminarProvincia(IdProvincia:str):
     try:
         cursor = conexion.cursor()
-        cursor.execute("Delete from [dbo].[Provincias] where IdProvincia = '"+IdProvincia+"'")
+        cursor.execute("Delete from Provincias where IdProvincia = '"+IdProvincia+"'")
         conexion.commit()
         return {"ok":True}
     except:
@@ -251,9 +258,8 @@ def NuevoNombreVacuna(Nombre:str):
         if Nombre == N:
             return {"ok":False}
         else:
-            Provincia = (Nombre)
-            sql = '''INSERT INTO VacunasExistente(NombreVacuna)VALUES(?)'''
-            cursor.execute(sql, Provincia)
+            sql = "INSERT INTO VacunasExistente(NombreVacuna)VALUES('"+Nombre+"')"
+            cursor.execute(sql)
             conexion.commit()
             return {"ok":True}
     except TypeError:
@@ -263,7 +269,7 @@ def NuevoNombreVacuna(Nombre:str):
 def ActualizarVacuna(IdVacuna:str,NuevoNombre:str):
     try:
         cursor = conexion.cursor()
-        cursor.execute("Update [dbo].[VacunasExistente] set NombreVacuna = '"+NuevoNombre+"' where IdVacuna = '"+IdVacuna+"'")
+        cursor.execute("Update VacunasExistente set NombreVacuna = '"+NuevoNombre+"' where IdVacuna = '"+IdVacuna+"'")
         conexion.commit()
         return {"ok":True}
     except:
@@ -273,7 +279,7 @@ def ActualizarVacuna(IdVacuna:str,NuevoNombre:str):
 def EliminarVacuna(IdVacuna:str):
     try:
         cursor = conexion.cursor()
-        cursor.execute("Delete from [dbo].[VacunasExistente] where IdVacuna = '"+IdVacuna+"'")
+        cursor.execute("Delete from VacunasExistente where IdVacuna = '"+IdVacuna+"'")
         conexion.commit()
         return {"ok":True}
     except:
