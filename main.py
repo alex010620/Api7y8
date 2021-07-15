@@ -20,8 +20,7 @@ username = 'ADMyamc@vtrd'
 password = "Ya95509550"  
 
 
-conexion = mysql.connector.connect(user="ADMyamc@vtrd", password="Ya95509550", host="vtrd.mysql.database.azure.com",
-port=3306, database="VacunateRDv")
+conexion = mysql.connector.connect(user="ADMyamc@vtrd", password="Ya95509550", host="vtrd.mysql.database.azure.com",port=3306, database="VacunateRDv")
 
 @app.get("/")
 def root():
@@ -173,7 +172,7 @@ def Provincias():
         cursor.execute("SELECT IdProvincia, NombreProvincia FROM Provincias")
         contenido = cursor.fetchall()
         for i in contenido:
-            Datos.append({"ok":True,"IdProvincia":i[0],"NombreProvincia":i[1]})
+            Datos.append({"ok":True,"IdProvincia":i[0],"NombredeProvincia":i[1]})
         if Datos == []:
             return {"ok":False}
         else:
