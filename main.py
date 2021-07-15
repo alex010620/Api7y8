@@ -1,9 +1,8 @@
-
+import mysql.connector
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from DatosVacunacionFirst import DatosVacunacionFirst
 from Dosis import Dosis
-import pyodbc
 app = FastAPI()
 origins = ["*"]
 app.add_middleware(
@@ -14,13 +13,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-server = 'tarea7y8.database.windows.net'
-database = 'tarea7y8'
-username = 'ADM-YAMC'
+server = 'vtrd.mysql.database.azure.com'
+database = 'VacunateRDv'
+username = 'ADMyamc@vtrd'
 password = "Ya95509550"  
-driver= '{SQL Server}'
 
-conexion = pyodbc.connect('DRIVER='+driver+';SERVER='+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password)
+
+conexion = mysql.connector.connect(user="ADMyamc@vtrd", password="Ya95509550", host="vtrd.mysql.database.azure.com",
+ port=3306, database="VacunateRDv", ssl_verify_cert=True)
+
 @app.get("/")
 def root():
     return {'Sistema': 'VacunaRD'}
@@ -192,7 +193,7 @@ def NuevaProvincia(Nombre:str):
             return {"ok":False}
         else:
             Provincia = (Nombre)
-            sql = '''INSERT INTO Provincias(NombreProvincia)VALUES(?)'''
+            sql = "INSERT INTO Provincias(NombreProvincia) VALUES ('"+Nombre+"')"
             cursor.execute(sql, Provincia)
             conexion.commit()
             return {"ok":True}
