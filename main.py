@@ -1,8 +1,9 @@
-from Conexion import conexion
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from DatosVacunacionFirst import DatosVacunacionFirst
 from Dosis import Dosis
+import pyodbc
 app = FastAPI()
 origins = ["*"]
 app.add_middleware(
@@ -12,6 +13,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+server = 'tarea7y8.database.windows.net'
+database = 'tarea7y8'
+username = 'ADM-YAMC'
+password = "Ya95509550"  
+driver= '{SQL Server}'
+
+conexion = pyodbc.connect('DRIVER='+driver+';SERVER='+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password)
 @app.get("/")
 def root():
     return {'Sistema': 'VacunaRD'}
