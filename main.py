@@ -24,7 +24,7 @@ conexion = mysql.connector.connect(user="ADMyamc@vtrd", password="Ya95509550", h
 
 @app.get("/")
 def root():
-    return {'Sistema': 'VacunaRD'}
+    return {'Sistema': 'ApiVacunaRD'}
 
 @app.get("/api/ConsultarCedula/{cedula}")
 def ConsultarCedula(cedula:str):
