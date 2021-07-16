@@ -168,8 +168,8 @@ def EliminarRegistroVacunado(IdUser:str):
         cursor.execute("Delete from Usuarios where IdUsuario = '"+IdUser+"'")
         cursor.execute("Delete from Vacunas where CedulaVacunado = '"+Cedula+"'")
         return {"ok":True}
-    except:
-        return {"ok":False}
+    except TypeError as e:
+        return e
 
 #CRUD PROVINCIAS
 
