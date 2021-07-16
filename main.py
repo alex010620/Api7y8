@@ -20,7 +20,7 @@ username = 'ADMyamc@vtrd'
 password = "Ya95509550"  
 
 
-conexion = mysql.connector.connect(user="ADMyamc@vtrd", password="Ya95509550", host="vtrd.mysql.database.azure.com",port=3306,database="VacunateRDv")
+conexion = mysql.connector.connect(user="ADMyamc@vtrd", password="Ya95509550", host="vtrd.mysql.database.azure.com",database="VacunateRDv")
 
 @app.get("/")
 def root():
@@ -29,6 +29,7 @@ def root():
 @app.get("/api/ConsultarCedula/{cedula}")
 def ConsultarCedula(cedula:str):
     Cedul=""
+    conexion.reconnect()
     cursor = conexion.cursor()
     cursor.execute("SELECT Cedula FROM Usuarios WHERE Cedula = '"+cedula+"'")
     contenido = cursor.fetchall()
@@ -42,6 +43,7 @@ def ConsultarCedula(cedula:str):
 @app.post("/api/RegistrarVacunadosFirst")
 def RegistrarVacunadosFirst(d:DatosVacunacionFirst):
     try:
+        conexion.reconnect()
         cursor = conexion.cursor()
         sql = "INSERT INTO Usuarios(Cedula,Nombre,Apellido,Telefono,Fecha_Nacimiento,Zodiaco)VALUES('"+d.Cedula+"','"+d.Nombre+"','"+d.Apellido+"','"+d.Telefono+"','"+d.Fecha_Nacimiento+"','"+d.Zodiaco+"')"
         sql2 = "INSERT INTO Vacunas(CedulaVacunado,NombreVacuna,Provincia,Fecha_Vacunacion)VALUES('"+d.Cedula+"','"+d.NombreVacuna+"','"+d.Provincia+"','"+d.Fecha_Vacunacion+"')"
@@ -55,6 +57,7 @@ def RegistrarVacunadosFirst(d:DatosVacunacionFirst):
 @app.post("/api/OtrasDosis")
 def OtrasDosis(d:Dosis):
     try:
+        conexion.reconnect()
         cursor = conexion.cursor()
         sql2 = "INSERT INTO Vacunas(CedulaVacunado,NombreVacuna,Provincia,Fecha_Vacunacion)VALUES('"+d.Cedula+"','"+d.NombreVacuna+"','"+d.Provincia+"','"+d.Fecha_Vacunacion+"')"
         cursor.execute(sql2)
@@ -66,6 +69,7 @@ def OtrasDosis(d:Dosis):
 @app.get("/api/ConsultaDeVacunados")
 def ConsultaDeVacunados():
     Datos = []
+    conexion.reconnect()
     cursor = conexion.cursor()
     cursor.callproc('SP_ConsultaDeVacunados')
     conexion.commit()
@@ -86,6 +90,7 @@ def ConsultaDeVacunadoUnico(NombreOApellido:str):
     Fecha_Nacimiento=""
     Zodiaco=""
     Cantidad=""
+    conexion.reconnect()
     cursor = conexion.cursor()
     cursor.execute("SELECT U.*, Count(V.IdVacuna) As Cantidaddevacunas FROM Usuarios AS U INNER JOIN Vacunas AS V ON U.Cedula = V.CedulaVacunado WHERE U.Nombre = '"+NombreOApellido+"' or U.Apellido= '"+NombreOApellido+"' GROUP BY U.idUsuario,U.Cedula, U.Nombre, U.Apellido,U.Telefono,U.Fecha_Nacimiento,U.Zodiaco")
     contenido = cursor.fetchall()
@@ -110,6 +115,7 @@ def ConsultaDeVacunadoUnico(NombreOApellido:str):
 @app.get("/api/VacunadosPorProvincia/{provincia}")
 def VacunadosPorProvincia(provincia:str):
     Datos = []
+    conexion.reconnect()
     cursor = conexion.cursor()
     cursor.execute("SELECT U.Cedula,U.Nombre, U.Apellido,U.Telefono,V.NombreVacuna,V.Provincia,V.Fecha_Vacunacion,U.IdUsuario FROM Usuarios AS U INNER JOIN Vacunas AS V ON U.Cedula = V.CedulaVacunado WHERE V.Provincia = '"+provincia+"' GROUP BY U.Cedula, U.Nombre,U.Apellido,U.Telefono,V.NombreVacuna,V.Provincia,V.Fecha_Vacunacion,U.IdUsuario")
     contenido = cursor.fetchall()
@@ -125,6 +131,7 @@ def VacunadosPorProvincia(provincia:str):
 @app.get("/api/VacunadosPorMarcaDeVacuna")
 def VacunadosPorMarcaDeVacuna():
     Datos = []
+    conexion.reconnect()
     cursor = conexion.cursor()
     cursor.callproc('SP_VacunadosPorMarcaDeVacuna')
     conexion.commit()
@@ -142,6 +149,7 @@ def VacunadosPorMarcaDeVacuna():
 @app.get("/api/VacunadosPorZodiaco")
 def VacunadosPorZodiaco():
     Datos = []
+    conexion.reconnect()
     cursor = conexion.cursor()
     cursor.execute('Select Zodiaco, Count(IdUsuario) as Cantidad from Usuarios where Zodiaco = Zodiaco GROUP BY Zodiaco')
     contenido = cursor.fetchall()
@@ -159,6 +167,7 @@ def VacunadosPorZodiaco():
 def EliminarRegistroVacunado(IdUser:str):
     try:
         Cedula = ""
+        conexion.reconnect()
         cursor = conexion.cursor()
         cursor.execute("Select CedulaVacunado from Vacunas where IdVacuna = '"+IdUser+"'")
         contenido = cursor.fetchall()
@@ -178,6 +187,7 @@ def EliminarRegistroVacunado(IdUser:str):
 def Provincias():
     try:
         Datos =[]
+        conexion.reconnect()
         cursor = conexion.cursor()
         cursor.execute("SELECT IdProvincia, NombreProvincia FROM Provincias")
         contenido = cursor.fetchall()
@@ -194,6 +204,7 @@ def Provincias():
 def NuevaProvincia(Nombre:str):
     try:
         N = ""
+        conexion.reconnect()
         cursor = conexion.cursor()
         cursor.execute("SELECT NombreProvincia FROM Provincias WHERE NombreProvincia = '"+Nombre+"'")
         contenido = cursor.fetchall()
@@ -213,6 +224,7 @@ def NuevaProvincia(Nombre:str):
 @app.put("/api/ActualizarProvincia/{IdProvincia}/{NuevoNombre}")
 def ActualizarProvincia(IdProvincia:str,NuevoNombre:str):
     try:
+        conexion.reconnect()
         cursor = conexion.cursor()
         cursor.execute("Update Provincias set NombreProvincia = '"+NuevoNombre+"' where IdProvincia = '"+IdProvincia+"'")
         conexion.commit()
@@ -223,6 +235,7 @@ def ActualizarProvincia(IdProvincia:str,NuevoNombre:str):
 @app.delete("/api/EliminarProvincia/{IdProvincia}")
 def EliminarProvincia(IdProvincia:str):
     try:
+        conexion.reconnect()
         cursor = conexion.cursor()
         cursor.execute("Delete from Provincias where IdProvincia = '"+IdProvincia+"'")
         conexion.commit()
@@ -237,6 +250,7 @@ def EliminarProvincia(IdProvincia:str):
 def VacunasExistente():
     try:
         Datos =[]
+        conexion.reconnect()
         cursor = conexion.cursor()
         cursor.execute("SELECT IdVacuna, NombreVacuna FROM VacunasExistente")
         contenido = cursor.fetchall()
@@ -253,6 +267,7 @@ def VacunasExistente():
 def NuevoNombreVacuna(Nombre:str):
     try:
         N = ""
+        conexion.reconnect()
         cursor = conexion.cursor()
         cursor.execute("SELECT NombreVacuna FROM VacunasExistente WHERE NombreVacuna = '"+Nombre+"'")
         contenido = cursor.fetchall()
@@ -271,6 +286,7 @@ def NuevoNombreVacuna(Nombre:str):
 @app.put("/api/ActualizarVacuna/{IdVacuna}/{NuevoNombre}")
 def ActualizarVacuna(IdVacuna:str,NuevoNombre:str):
     try:
+        conexion.reconnect()
         cursor = conexion.cursor()
         cursor.execute("Update VacunasExistente set NombreVacuna = '"+NuevoNombre+"' where IdVacuna = '"+IdVacuna+"'")
         conexion.commit()
@@ -281,6 +297,7 @@ def ActualizarVacuna(IdVacuna:str,NuevoNombre:str):
 @app.delete("/api/EliminarVacuna/{IdVacuna}")
 def EliminarVacuna(IdVacuna:str):
     try:
+        conexion.reconnect()
         cursor = conexion.cursor()
         cursor.execute("Delete from VacunasExistente where IdVacuna = '"+IdVacuna+"'")
         conexion.commit()
