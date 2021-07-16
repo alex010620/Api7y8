@@ -137,6 +137,8 @@ def VacunadosPorMarcaDeVacuna():
     else:
         return Datos
 
+
+
 @app.get("/api/VacunadosPorZodiaco")
 def VacunadosPorZodiaco():
     Datos = []
@@ -150,6 +152,8 @@ def VacunadosPorZodiaco():
         return {"ok":False}
     else:
         return Datos
+
+
 
 @app.delete("/api/EliminarRegistroVacunado/{IdUser}")
 def EliminarRegistroVacunado(IdUser:str):
